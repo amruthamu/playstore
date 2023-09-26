@@ -1,0 +1,25 @@
+{
+  "themes": [
+    {
+      "theme": "dark",
+      "data": {
+        "color": "#FF0000",
+        "backgroundColor": "#000000"
+      }
+    },
+    {
+      "theme": "light",
+      "data": {
+        "color": "#0000FF",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    {
+      "theme": "custom",
+      "data":{
+        "color": "#FFCC70",
+        "backgroundColor": "#fff"
+      }
+    }
+  ]
+}

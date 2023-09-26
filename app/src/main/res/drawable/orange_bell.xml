@@ -1,0 +1,21 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- White circle background for the border -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- Bell icon path on top of the white circle -->
+    <item android:right="4dp" android:left="4dp" android:top="4dp" android:bottom="4dp">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="24.0"
+            android:viewportHeight="24.0">
+            <path
+                android:fillColor="#f9ba4d"
+                android:pathData="M19,15V9A7,7 0 0,0 12,2A7,7 0 0,0 5,9V15L2,18V19H22V18M12,22A2,2 0 0,1 10,20H14A2,2 0 0,1 12,22Z" />
+        </vector>
+    </item>
+</layer-list>
