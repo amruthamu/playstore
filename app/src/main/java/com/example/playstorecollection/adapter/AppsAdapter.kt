@@ -41,33 +41,47 @@ class AppsAdapter(
             Log.d("ccc",fileName)
         }
         holder.textView.text = fileName
-        if (fileName.equals("Google")) {
-            holder.itemImage.setImageResource(R.drawable.google_icon_logo_svgrepo_com)
-        } else if (fileName.equals("Ola")) {
-            holder.itemImage.setImageResource(R.drawable.ic_ola_foreground)
-        } else if (fileName.equals("Uber")) {
-            holder.itemImage.setImageResource(R.drawable.uber)
-        } else if (fileName.equals("Facebook")) {
-            holder.itemImage.setImageResource(R.drawable.facebook_2_logo_svgrepo_com)
-        }else if (fileName.equals("Instagram")) {
-            holder.itemImage.setImageResource(R.drawable.instagram_svgrepo_com)
-        }else if (fileName.equals("BigBasket")) {
-            holder.itemImage.setImageResource(R.drawable.ic_bigbasketplaystore)
-        }else if (fileName.equals("Flip")) {
-            holder.itemImage.setImageResource(R.drawable.flipkart_icon)
-        }
-        else if (fileName.equals("Shopsy")) {
-            holder.itemImage.setImageResource(R.drawable.ic_shopsyplaystore)
-        } else if (fileName.equals("DailyHunt")) {
-            holder.itemImage.setImageResource(R.drawable.ic_newsplaystore)
-        }else if (fileName.equals("Watchlist")) {
-            holder.itemImage.setImageResource(R.drawable.watchlist)
-        }
-        else if (fileName.equals("NativeFeature")) {
-            holder.itemImage.setImageResource(R.drawable.maps)
-        }
-        else if (fileName.equals("Rapido")) {
-            holder.itemImage.setImageResource(R.drawable.rapido)
+//        if (fileName.equals("Google")) {
+//            holder.itemImage.setImageResource(R.drawable.google_icon_logo_svgrepo_com)
+//        } else if (fileName.equals("Uber")) {
+//            holder.itemImage.setImageResource(R.drawable.uber)
+//        } else if (fileName.equals("Facebook")) {
+//            holder.itemImage.setImageResource(R.drawable.facebook_2_logo_svgrepo_com)
+//        }else if (fileName.equals("Instagram")) {
+//            holder.itemImage.setImageResource(R.drawable.instagram_svgrepo_com)
+//        }else if (fileName.equals("BigBasket")) {
+//            holder.itemImage.setImageResource(R.drawable.ic_bigbasketplaystore)
+//        }else if (fileName.equals("Flip")) {
+//            holder.itemImage.setImageResource(R.drawable.flipkart_icon)
+//        }
+//        else if (fileName.equals("Shopsy")) {
+//            holder.itemImage.setImageResource(R.drawable.ic_shopsyplaystore)
+//        } else if (fileName.equals("DailyHunt")) {
+//            holder.itemImage.setImageResource(R.drawable.ic_newsplaystore)
+//        }else if (fileName.equals("Watchlist")) {
+//            holder.itemImage.setImageResource(R.drawable.watchlist)
+//        }
+//        else if (fileName.equals("NativeFeature")) {
+//            holder.itemImage.setImageResource(R.drawable.maps)
+//        }
+//        else if (fileName.equals("Rapido")) {
+//            holder.itemImage.setImageResource(R.drawable.rapido)
+//        }
+
+         if (fileName.equals("Activity")) {
+            holder.itemImage.setImageResource(R.drawable.activity)
+        } else if (fileName.equals("Earnings")) {
+            holder.itemImage.setImageResource(R.drawable.earnings)
+        } else if (fileName.equals("Greetings")) {
+            holder.itemImage.setImageResource(R.drawable.greetings)
+        }else if (fileName.equals("LMS")) {
+            holder.itemImage.setImageResource(R.drawable.lms)
+        }else if (fileName.equals("Reviews")) {
+            holder.itemImage.setImageResource(R.drawable.reviews)
+        }else if (fileName.equals("Team")) {
+            holder.itemImage.setImageResource(R.drawable.team)
+        }else if (fileName.equals("Performance")) {
+            holder.itemImage.setImageResource(R.drawable.performance)
         }
 
         if (isFromHomepage) {
