@@ -42,5 +42,9 @@ class AppsJavaScriptInterface(private val callback: ApiResponseCallback) {
         Log.d("themesend", message)
         callback.onThemeData(message)
     }
+    @JavascriptInterface
+    public fun sendUserCredentials(message: String){
+        callback.onNameData(message)
+    }
 
 }

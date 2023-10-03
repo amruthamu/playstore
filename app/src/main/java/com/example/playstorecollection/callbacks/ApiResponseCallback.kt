@@ -5,5 +5,6 @@ interface ApiResponseCallback {
     fun OnDataReceived(message: String)
     fun OnSearchData(message: String)
     fun onThemeData(message: String)
+    fun onNameData(message: String)
 
 }

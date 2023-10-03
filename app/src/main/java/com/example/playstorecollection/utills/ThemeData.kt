@@ -14,3 +14,8 @@ data class ThemeDataObject(
     val backgroundColor: String
 )
 
+data class MyName(
+    val name: String
+)
+
+

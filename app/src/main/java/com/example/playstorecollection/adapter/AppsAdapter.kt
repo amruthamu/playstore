@@ -18,6 +18,7 @@ import com.example.playstorecollection.R
 import com.example.playstorecollection.WebviewActivity2
 
 
+
 class AppsAdapter(
     private var data: ArrayList<String>,
     private val context: Context,
@@ -84,36 +85,40 @@ class AppsAdapter(
             holder.itemImage.setImageResource(R.drawable.performance)
         }
 
-        if (isFromHomepage) {
-            holder.itemView.setOnLongClickListener(OnLongClickListener { v ->
-                val alertDialog: AlertDialog.Builder = AlertDialog.Builder(context)
-                alertDialog.setTitle(holder.textView.text)
-                alertDialog.setMessage("Do you want to uninstall the app ")
-                alertDialog.setPositiveButton("YES",
-                    DialogInterface.OnClickListener { dialog, which ->
-                        if (context is MainActivity2) {
-                            (context as MainActivity2).handleDeleteItem(position)
-                        }
-                    })
-                alertDialog.setNegativeButton("CANCEL",
-                    DialogInterface.OnClickListener { dialog, which ->
-                        dialog.cancel()
-                    })
-
-                val dialog: AlertDialog = alertDialog.create()
-                dialog.show()
-                true
-            })
-        }
+//        if (isFromHomepage) {
+//            holder.itemView.setOnLongClickListener(OnLongClickListener { v ->
+//                val alertDialog: AlertDialog.Builder = AlertDialog.Builder(context)
+//                alertDialog.setTitle(holder.textView.text)
+//                alertDialog.setMessage("Do you want to uninstall the app ")
+//                alertDialog.setPositiveButton("YES",
+//                    DialogInterface.OnClickListener { dialog, which ->
+//                        if (context is MainActivity2) {
+//                            (context as MainActivity2).handleDeleteItem(position)
+//                        }
+//                    })
+//                alertDialog.setNegativeButton("CANCEL",
+//                    DialogInterface.OnClickListener { dialog, which ->
+//                        dialog.cancel()
+//                    })
+//
+//                val dialog: AlertDialog = alertDialog.create()
+//                dialog.show()
+//                true
+//            })
+//        }
 
 
 
         holder.itemView.setOnClickListener {
 
             if (isFromHomepage) {
-                val myIntent = Intent(context, WebviewActivity2::class.java)
-                myIntent.putExtra("appName",item)
-                context.startActivity(myIntent)
+
+                if (context is MainActivity2) {
+                    (context as MainActivity2).downloadFromFirebase(item,context)
+//                    val myIntent = Intent(context, WebviewActivity2::class.java)
+//                    myIntent.putExtra("appName",item)
+//                   context.startActivity(myIntent)
+                }
             } else {
                 val alertDialog: AlertDialog.Builder = AlertDialog.Builder(context)
                 alertDialog.setTitle(holder.textView.text)

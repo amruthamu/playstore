@@ -1,21 +1,30 @@
 package com.example.playstorecollection
 
+import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.view.View
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.annotation.RequiresApi
+import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.BuildConfig
 import com.example.playstorecollection.callbacks.ApiResponseCallback
 import com.example.playstorecollection.callbacks.AppsJavaScriptInterface
 import com.example.playstorecollection.callbacks.WatchlistApiServices
 import com.example.playstorecollection.model.*
+import com.example.playstorecollection.utills.MyName
 import com.example.playstorecollection.utills.ThemeData
 import com.example.playstorecollection.utills.ThemeSwitchState
+import com.example.playstorecollection.utills.UseNameState
 import com.google.gson.Gson
+import kotlinx.android.synthetic.main.activity_main2.progressBar
 import kotlinx.android.synthetic.main.activity_webview2.*
 import okhttp3.OkHttpClient
 import org.json.JSONArray
@@ -37,11 +46,21 @@ class WebviewActivity2 : AppCompatActivity(), ApiResponseCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_webview2)
-
-
+        supportActionBar?.hide()
         val intent = intent
         appname = intent.getStringExtra("appName").toString()
         var filename = appname.replace(".zip","")
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        // // Replace 'R.id.toolbar' with the ID of your Toolbar
+      if(appname=="uuuu"){
+          text1.text = "Activity"
+       }else{
+          text1.text = appname
+       }
+        toolbar_image.setOnClickListener {
+            finish()
+        }
+
         //getWatchlistData()
         //getWatchlistSymbolData("new")
         //getWatchlistSearchSymbolData("aa")
@@ -58,6 +77,7 @@ class WebviewActivity2 : AppCompatActivity(), ApiResponseCallback {
         // view.addJavascriptInterface(new NativeAndWebBridgeInterface(this), "Android");
         webview.getSettings().setJavaScriptEnabled(true)
        webview.settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        webview.clearCache(true)
 
         // view.loadUrl("file:///" + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/unzipped"+ appname +"/build/index.html");
         // view.loadUrl("file:///" + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/unzippedAppNew/" +filename +"/web/index.html");
@@ -78,9 +98,24 @@ class WebviewActivity2 : AppCompatActivity(), ApiResponseCallback {
                 Log.d("webvdview", url)
                 return true
             }
-
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                progress_bar.visibility = View.VISIBLE
+            }
+            @RequiresApi(Build.VERSION_CODES.M)
+            override fun onReceivedError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                error: WebResourceError?
+            ) {
+                super.onReceivedError(view, request, error)
+                Log.e("WebViewErrorammu", "Error: ${error?.description}")
+                // Show the progress bar for errors
+                progress_bar.visibility = View.VISIBLE
+            }
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
+                progress_bar.visibility=View.GONE
                 /* view.evaluateJavascript(url) { value -> // 'value' contains the result of the JavaScript code
                      Log.d("WebdView", "Data: $value")
                  }*/
@@ -193,6 +228,8 @@ class WebviewActivity2 : AppCompatActivity(), ApiResponseCallback {
                     webView.evaluateJavascript(javascriptCode2, null);
                 });*/
             }
+
+
         })
     }
 
@@ -229,6 +266,20 @@ class WebviewActivity2 : AppCompatActivity(), ApiResponseCallback {
         }
 
     }
+
+    override fun onNameData(message: String) {
+        runOnUiThread {
+            val jsonData = """
+        {"name":"${UseNameState.UserName}"}
+        """.trimIndent()
+            val gson = Gson()
+            val data = gson.fromJson(jsonData, MyName::class.java)
+            val jsonD = gson.toJson(data)
+            val javascriptCode2 = "getUserData('$jsonD')"
+            webview.evaluateJavascript(javascriptCode2, null)
+        }
+    }
+
     private fun loadThemeDataJsonFromFile(): ThemeData {
         val jsonData = """
         {

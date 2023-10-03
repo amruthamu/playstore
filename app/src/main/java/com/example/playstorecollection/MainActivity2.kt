@@ -1,27 +1,44 @@
 package com.example.playstorecollection
 
 import DataResponse
+import LoadingActivity
+import android.Manifest
 import android.Manifest.permission.*
+import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.os.PersistableBundle
 import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.os.postDelayed
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.playstorecollection.adapter.AppsAdapter
 import com.example.playstorecollection.callbacks.WatchlistApiServices
 import com.example.playstorecollection.model.*
+import com.example.playstorecollection.utills.DecompressFast
+import com.example.playstorecollection.utills.ThemeSwitchState
+import com.example.playstorecollection.utills.UseNameState
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import kotlinx.android.synthetic.main.activity_main.progressBar
 import kotlinx.android.synthetic.main.activity_main2.*
 import okhttp3.OkHttpClient
 import org.json.JSONArray
@@ -54,6 +71,11 @@ class MainActivity2 : AppCompatActivity()  {
     private lateinit var dealersCount: TextView
     private lateinit var today: TextView
     private lateinit var week: TextView
+    private var appsList = java.util.ArrayList<String>()
+    private lateinit var handler: Handler
+    private lateinit var runnable: Runnable
+    private var isUnzippingFinished = false
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,12 +84,47 @@ class MainActivity2 : AppCompatActivity()  {
         supportActionBar?.hide()
 
         progressBar2 = findViewById(R.id.progressBar)
+        val themeSwitch = findViewById<Switch>(R.id.themeSwitch)
         val rvInstalledAppsList = findViewById<View>(R.id.rv_apps2) as RecyclerView
+
+
          sharedPreferences = getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
 
         getAPIData()
         getWatchlistSymbolData("new")
+      //  val themeSwitch = findViewById<Switch>(R.id.themeSwitch)
+    //    themeSwitch.isChecked = ThemeSwitchState.isDarkThemeEnabled
+        themeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+            Log.d("ThemeSwitch", "Switch state changed: isChecked = $isChecked")
+            // Handle switch state changes here
+            if (isChecked) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                ThemeSwitchState.isDarkThemeEnabled=true
+                Log.d("ThemeSwitch", "Dark theme enabled:${ThemeSwitchState.isDarkThemeEnabled}")
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                ThemeSwitchState.isDarkThemeEnabled=false
+            }
+        }
+
+        handler = Handler(Looper.getMainLooper())
+        val progressBar: ProgressBar = findViewById(R.id.progressBar)
    //     val pieChartView: PieChartView = findViewById(R.id.pieChart)
+        getFirebaseStorageList()
+        runnable = Runnable {
+            // Code to be executed after the delay
+            // Toast.makeText(this, "Delayed task executed!", Toast.LENGTH_SHORT).show()
+            adapter = appsList.let { AppsAdapter(it, this, true) }
+            Log.d("newww", appsList.toString())
+            rvInstalledAppsList.adapter = adapter
+            val numberOfColumns = 4
+            rvInstalledAppsList.layoutManager = GridLayoutManager(this,numberOfColumns)
+            progressBar.visibility = View.GONE
+       }
+
+
+        handler.postDelayed(runnable, 1000)
+
 
 
 
@@ -75,16 +132,14 @@ class MainActivity2 : AppCompatActivity()  {
             intent.extras?.getString("installapp")?.let {
                  insApps = intent.extras?.getString("installapp")!!
             }
-
-
             if (retrieveSavedData().contains(insApps)){
                 Toast.makeText(this@MainActivity2, "App Already installed", Toast.LENGTH_SHORT).show()
             } else {
                 progressBar2.visibility = View.VISIBLE
                 val handler1 = Handler(Looper.getMainLooper())
-                handler1.postDelayed(Runnable {
+               handler1.postDelayed(Runnable {
                     progressBar2.visibility = View.GONE
-                },3000)
+               },3000)
             }
 
 
@@ -121,14 +176,14 @@ class MainActivity2 : AppCompatActivity()  {
         }
 
 
-         installedAppsList = retrieveSavedData()
-         adapter = installedAppsList.let { AppsAdapter(it, this, true) }
-
-
-
-        rvInstalledAppsList.adapter = adapter
-        val numberOfColumns = 3
-        rvInstalledAppsList.layoutManager = GridLayoutManager(this,numberOfColumns)
+//         installedAppsList = retrieveSavedData()
+//         adapter = installedAppsList.let { AppsAdapter(it, this, true) }
+//
+//
+//
+//        rvInstalledAppsList.adapter = adapter
+//        val numberOfColumns = 4
+//        rvInstalledAppsList.layoutManager = GridLayoutManager(this,numberOfColumns)
 
 
         fab2.setOnClickListener {
@@ -136,7 +191,7 @@ class MainActivity2 : AppCompatActivity()  {
             startActivity(myIntent)
         }
         if (retrieveSavedData().isEmpty()) {
-            hometext.visibility = View.VISIBLE
+            hometext.visibility = View.GONE
         } else {
             hometext.visibility = View.GONE
         }
@@ -178,6 +233,7 @@ class MainActivity2 : AppCompatActivity()  {
                             if (dataResponse != null && dataResponse.data.profiles.isNotEmpty()) {
                                 val profile = dataResponse.data.profiles[0]
                                 dataTextView.text = profile.username
+                                UseNameState.UserName=profile.username
                                 name.text=profile.name
                                 gwpAmount.text=profile.currency+profile.gwpAmount
                                 nopValue.text=profile.nopValue
@@ -201,6 +257,149 @@ class MainActivity2 : AppCompatActivity()  {
                 t.printStackTrace()
             }
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+    }
+
+
+    public fun downloadFromFirebase(appName: String,context: Context) {
+        if (ContextCompat.checkSelfPermission(
+                baseContext,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT <= 30
+        ) {
+            ActivityCompat.requestPermissions(
+                this@MainActivity2,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                1
+            )
+        } else {
+            getUrlFromFirebase(appName,context)
+        }
+
+    }
+    private fun getUrlFromFirebase(appname: String,context: Context) {
+        // Points to the root reference
+        val storageRef: StorageReference = FirebaseStorage.getInstance().getReference()
+        val firebaseFile: StorageReference =
+            storageRef.child(appname)
+
+        // val rootPath = File(Environment.getExternalStorageDirectory(), "file_name")
+
+        /*  var path =
+              Environment.getDataDirectory().absolutePath.toString()
+          val mFolder = File(path)*/
+
+        /*var pathNew = ""
+        //if (pathNew.isEmpty()){
+            val file = File(this.filesDir, appname)
+            pathNew = file.absolutePath
+            Log.d("PATH", pathNew)
+            if (!file.exists()) {
+                file.mkdirs()
+            }
+       // }*/
+
+        /* if (!rootPath.exists()) {
+            // rootPath.mkdirs()
+         }
+         val localFile = File(file, appname)
+         val  final = File(filesDir,appname)
+
+         val fileName = "example.zip" // Specify the desired file name
+         val fileupdate = File(filesDir, appname) // Internal storage file object
+         val filePath = fileupdate.absolutePath*/
+        /* firebaseFile.getFile(final).addOnSuccessListener {
+             Log.e("firebase2 ",";local success " +file.toString() + localFile);
+             handler.postDelayed(Runnable {
+                 unzipfile(appname)
+             },2000)
+         }.addOnFailureListener{
+             Log.e("firebase2 failure",";local failure " +it);
+         }*/
+
+
+        firebaseFile.downloadUrl.addOnSuccessListener {
+            downloadFile2(this, it.toString(), appname,context)
+            Log.d("collectt_success", it.toString())
+        }.addOnFailureListener {
+            Log.d("collectt", it.toString())
+        }
+
+
+    }
+    private fun downloadFile2(context: Context, url: String?, fileName: String?,myContext:Context) {
+        val downloadManager = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+        val downloadUri = Uri.parse(url)
+        val request = DownloadManager.Request(downloadUri)
+        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
+            .setTitle(fileName)
+            .setDescription("Downloading")
+            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+        Log.e("Decompress33", "download succdess")
+        downloadManager.enqueue(request)
+
+    //   handler.postDelayed(Runnable {
+            unzipfile2(fileName,myContext)
+     //   }, 3000)
+    }
+    fun unzipfile2(fileNameZip: String?,myContext: Context) {
+        val zipFileName2 =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                .toString() + "/" +fileNameZip
+        var filename = fileNameZip?.replace(".zip","")
+        val destinationPath =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                .toString() + "/unzippedAppNew/"+ filename + "/"
+        val destinationPath2 =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                .toString()
+
+
+        val df = DecompressFast(
+            zipFileName2,
+            destinationPath
+        )
+        df.unzip()
+        val myIntent = Intent(myContext, WebviewActivity2::class.java)
+            myIntent.putExtra("appName",filename)
+            myContext.startActivity(myIntent)
+
+
+
+
+        //isUnzippingFinished=true
+
+        // df.unzipNew(zipFileName2,destinationPath)
+
+        // df.unpackZip(destinationPath2,zipFileName2)
+        // unzipFilePath( zipFileName2,destinationPath )
+
+        Toast.makeText(this@MainActivity2, "Unziping file", Toast.LENGTH_SHORT).show()
+    }
+    fun getFirebaseStorageList() {
+        val storageRef: StorageReference = FirebaseStorage.getInstance().getReference()
+
+
+        progressBar.visibility = View.VISIBLE
+        storageRef.listAll()
+            .addOnSuccessListener { listResult ->
+                for (item in listResult.items) {
+                    // Process each item (file) here
+                    val fileName = item.name
+                    Log.d("newwwfile url2", fileName)
+                    appsList.add(fileName)
+                }
+
+            }
+            .addOnFailureListener { err ->
+                Log.d("newwwfile err", err.toString())
+                progressBar.visibility = View.GONE
+                // Handle any errors that occur while listing the files
+            }
     }
 
 
